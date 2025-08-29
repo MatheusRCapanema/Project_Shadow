@@ -1,0 +1,93 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "metrics",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2d3c15e5-ecd0-444f-8124-5d0e79c2f163",
+      "name": "Webhook",
+      "webhookId": "10141324-73a6-4e97-bf87-e3c77722c68b"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    ROUND(SUM(spend)::NUMERIC / NULLIF(SUM(conversions), 0), 2) AS cac, \n    ROUND((SUM(conversions) * 100)::NUMERIC / NULLIF(SUM(spend), 0), 2) AS roas \nFROM ads_spend \nWHERE date BETWEEN '{{ $json.query.start }}' AND '{{ $json.query.end }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        208,
+        0
+      ],
+      "id": "95e3bfbd-9e20-4261-9723-43791e0e0e8e",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "5RpeFpvfKGq1FOoq",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "730e4335-e435-462a-89bb-0f40d987e8c2",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "09cdd811-6442-413c-a0a7-e5aed85a20f6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7b9736bab945a8dd04e58f5d1a00f60d8cfc99035e9c52204c8d5326508f1bdb"
+  },
+  "id": "UQ613KefEIIeigwh",
+  "tags": []
+}
