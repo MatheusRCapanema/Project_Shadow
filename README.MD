@@ -7,7 +7,7 @@ This repository contains the solution for the AI Data Engineer technical test. T
 * **n8n Workflows**: The `ingestion_workflow.json` and `metrics_api_workflow.json` files are included in this repository.
 * **GitHub Repo**: You are currently viewing it.
 * **README**: This file serves as the primary documentation.
-* **Loom Video**: [\[Link to your 5-minute Loom video explanation will go here\]](https://www.loom.com/share/ff019849619a4d51a6220bf52f857a16?sid=94b45d21-33f6-489a-a49e-51e5291cb1e1)
+* **Loom Video**: [\[Loom video\]](https://www.loom.com/share/ff019849619a4d51a6220bf52f857a16?sid=94b45d21-33f6-489a-a49e-51e5291cb1e1)
 * **Results Screenshot**: A screenshot of the final analysis is included in the "Results" section below.
 
 ---
