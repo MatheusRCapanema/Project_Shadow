@@ -1,91 +1,120 @@
-# Marketing KPI Analysis Project
+# AI Data Engineer Challenge - 8 Figure Agency
 
-This repository contains a data pipeline and an API for analyzing marketing metrics (CAC and ROAS), built with n8n, PostgreSQL, and Docker.
+## Dev Test – AI Data Engineer Role
 
-## 🚀 Setup and Instructions
+We want to see how you approach data ingestion, modeling, and making metrics accessible. The goal is not a production system, but a clear demonstration of your thinking, SQL skills, and ability to use automation (n8n).
 
-1.  **Prerequisites:** Ensure you have Docker and Docker Compose installed.
-2.  **Clone the Repository:** `git clone <REPO_URL>`
-3.  **Start the Services:** In the project's root directory, run the following command:
+## Project Structure
+
+├── workflows/
+│   ├── ingestion_workflow.json
+│   └── metrics_api_workflow.json
+├── sql/
+│   ├── create_table.sql
+│   └── kpi_analysis.sql
+├── docker-compose.yml
+└── README.md
+
+## Prerequisites
+- Docker and Docker Compose installed.
+- Git.
+- n8n installed locally (optional, for workflow execution; otherwise, use exported JSON).
+
+## Setup Instructions
+
+1.  **Clone the Repository**
+    ```bash
+    git clone <repo-url>
+    cd <repo-folder>
+    ```
+2.  **Start Services**
     ```bash
     docker-compose up -d
     ```
-    This will start the PostgreSQL and n8n containers.
-4.  **Access n8n:** Open your browser and go to `http://localhost:5678`. Create your admin account.
-5.  **Configure the Database Connection:**
-    * Navigate to the "Credentials" section and add a new credential for "Postgres".
-    * Use the following settings:
-        * **Host:** `postgres` (the service name in docker-compose)
-        * **Database:** `ads_db`
-        * **User:** `postgres`
-        * **Password:** `123`
-        * **Port:** `5432`
-6.  **Import the Workflows:**
-    * Go to the "Workflows" section and import the `ingestion_workflow.json` and `metrics_api_workflow.json` files.
-    * Assign the Postgres credential created in the previous step to the Postgres nodes in both workflows.
-7.  **Run the Ingestion:**
-    * Open the ingestion workflow and execute it manually. This will download the CSV, create the `ads_spend` table (if it doesn't exist), and populate it with data.
+    This command starts the PostgreSQL and n8n services as defined in the configuration file. PostgreSQL will be available on `localhost:5432`.
 
----
+3.  **Initialize the Database**
+    ```bash
+    docker exec -i project_shadow-postgres-1 psql -U postgres -d ads_db < sql/create_table.sql
+    ```
+    This command executes the `create_table.sql` script to create the `ads_spend` table in the `ads_db` database.
 
-## Part 4 – Agent Demo (Bonus)
+4.  **Run Ingestion Workflow (Part 1 – Ingestion)**
+    * Import `workflows/ingestion_workflow.json` into n8n (accessible at `http://localhost:5678` if running locally).
+    * The workflow downloads the `ads_spend.csv` dataset from the specified Google Drive URL.
+    * Execute the workflow. It orchestrates the ingestion into the PostgreSQL `ads_spend` table.
+    * **Requirements Met:**
+        * The workflow uses n8n to manage the ingestion process.
+        * It adds `load_date` and `source_file_name` as metadata for data provenance.
 
-This section demonstrates how a natural language question can be mapped to an SQL query to produce an analytical answer. This is a foundational concept for building BI (Business Intelligence) agents and analytical chat systems.
+5.  **KPI Modeling (Part 2 – KPI Modeling)**
+    * The project requires building queries to compute key performance indicators:
+        * CAC (Customer Acquisition Cost) = $spend \ / \ conversions$
+        * ROAS (Return on Ad Spend) = $(conversions \ * \ 100) \ / \ spend$
+    * The analysis comparing the last 30 days versus the prior 30 days is performed by `sql/kpi_analysis.sql`. Run it with the following command:
+        ```bash
+        docker exec -i project_shadow-postgres-1 psql -U postgres -d ads_db -f sql/kpi_analysis.sql
+        ```
+    * The query's output is a compact table showing absolute values for each period and the percentage change.
 
-### Natural Language Question:
+6.  **Analyst Access (Part 3 – Analyst Access)**
+    * To provide simple access to the metrics, import and activate the `workflows/metrics_api_workflow.json` in n8n.
+    * This creates an API endpoint at `/metrics` that accepts `start` and `end` query parameters.
+    * **Test the API** by navigating to a URL like this in your browser (adjust dates as needed):
+        `http://localhost:5678/webhook/metrics?start=2025-04-01&end=2023-05-01`
+    * **Expected Output:** A JSON object with the calculated metrics.
+        ```json
+        {"cac": 50.00, "roas": 2.00}
+        ```
 
-> “Compare CAC and ROAS for the last 30 days vs the prior 30 days.”
+7.  **Agent Demo (Part 4 – Agent Demo, Bonus, Optional)**
 
-### Mapping to an Action
+    This section demonstrates how a natural-language question could be mapped to the project's existing SQL query to produce an answer.
 
-An AI agent or a simple mapping system would process this question in three steps:
+    **Natural Language Question:**
+    > "Compare CAC and ROAS for the last 30 days vs the prior 30 days."
 
-1.  **Intent Recognition:** The system identifies that the user's primary intent is to **compare performance** across two time periods. Keywords like "compare" and "vs" trigger this intent.
+    **Simple Mapping Approach:**
+    * **Parsing:** A basic system would parse the question to identify intent and entities.
+        * **Intent:** The word "Compare" signals a *comparison* intent.
+        * **Entities:** "CAC", "ROAS", "last 30 days", "prior 30 days".
+    * **Mapping to Query:** The combination of this intent and entities maps directly to the execution of the `sql/kpi_analysis.sql` script. The script is already designed to dynamically calculate these metrics for these specific timeframes based on the latest date in the data.
+    * **Execution & Output:** Running the query produces a comparison table, directly answering the user's question.
 
-2.  **Entity Extraction:** The system extracts the specific "entities" or parameters from the question:
-    * **Metrics:** `CAC` (Customer Acquisition Cost), `ROAS` (Return on Ad Spend).
-    * **Period 1:** `last 30 days`.
-    * **Period 2:** `prior 30 days`.
+    **How to Test the Concept:**
+    The mapping itself is conceptual. However, you can manually trigger the underlying SQL query to see the result that the agent would produce:
+    ```bash
+    docker exec -i project_shadow-postgres-1 psql -U postgres -d ads_db -f sql/kpi_analysis.sql
+    ```
 
-3.  **Action Mapping:** With the "compare performance" intent and the extracted entities, the system maps this request to the execution of a pre-defined SQL query designed specifically for this analysis. The query used is `kpi_analysis.sql`.
+## Part 4 – Agent Demo (Bonus, Optional)
 
-### Mapped SQL Query (`kpi_analysis.sql`)
+Demonstra como uma pergunta em linguagem natural como:
+"Compare CAC e ROAS dos últimos 30 dias versus os 30 dias anteriores."
+poderia ser mapeada para sua consulta e produzir uma resposta.
 
-The user's question is translated directly into the following SQL query, which calculates the metrics for both periods and the percentage change between them.
+### Abordagem de Mapeamento Simples
 
-```sql
-WITH max_date_cte AS (
-    SELECT MAX(date) AS max_date FROM ads_spend
-),
+* **Análise (Parsing):** Use um padrão básico para detectar a intenção e os parâmetros.
+    * **Padrão:** Procurar por "compare" + métricas ("CAC" e/ou "ROAS") + períodos de tempo ("últimos X dias vs Y dias anteriores").
+    * **Exemplo de correspondência:** "compare CAC e ROAS dos últimos 30 dias vs 30 dias anteriores" → Extrair X=30, Y=30.
 
-last_30 AS (
-    SELECT 
-        SUM(spend) AS spend_last,
-        SUM(conversions) AS conv_last
-    FROM ads_spend, max_date_cte
-    WHERE date BETWEEN max_date - INTERVAL '29 days' AND max_date
-),
+* **Mapeamento para Consulta:** Mapeie a entrada analisada para o script `sql/kpi_analysis.sql`, que usa dinamicamente `MAX(date)` e `INTERVAL` para lidar com os períodos de 30 dias.
+    * O SQL já calcula o CAC (`spend / conversions`) e o ROAS (`(conversions * 100) / spend`), comparando os últimos 30 dias com os 30 dias anteriores.
 
-prior_30 AS (
-    SELECT 
-        SUM(spend) AS spend_prior,
-        SUM(conversions) AS conv_prior
-    FROM ads_spend, max_date_cte
-    WHERE date BETWEEN max_date - INTERVAL '59 days' AND max_date - INTERVAL '30 days'
-)
+* **Execução:** Execute a consulta no PostgreSQL para produzir a tabela.
 
-SELECT 
-    'Last 30 Days' AS period,
-    ROUND(l.spend_last / NULLIF(l.conv_last, 0), 2) AS cac,
-    ROUND((l.conv_last * 100) / NULLIF(l.spend_last, 0), 2) AS roas,
-    ROUND(100 * ((l.spend_last / NULLIF(l.conv_last, 0) - p.spend_prior / NULLIF(p.conv_prior, 0)) / NULLIF(p.spend_prior / NULLIF(p.conv_prior, 0), 0)), 2) || '%' AS cac_change,
-    ROUND(100 * (((l.conv_last * 100) / NULLIF(l.spend_last, 0) - (p.conv_prior * 100) / NULLIF(p.spend_prior, 0)) / NULLIF((p.conv_prior * 100) / NULLIF(p.spend_prior, 0), 0)), 2) || '%' AS roas_change
-FROM last_30 l, prior_30 p
-UNION ALL
-SELECT 
-    'Prior 30 Days' AS period,
-    ROUND(p.spend_prior / NULLIF(p.conv_prior, 0), 2) AS cac,
-    ROUND((p.conv_prior * 100) / NULLIF(p.spend_prior, 0), 2) AS roas,
-    '-' AS cac_change,
-    '-' AS roas_change
-FROM prior_30 p;
+* **Exemplo de Saída (com base em dados de amostra):**
+
+| Period        | CAC   | ROAS | CAC Change | ROAS Change |
+|---------------|-------|------|------------|-------------|
+| Last 30 Days  | 50.00 | 2.00 | -          | -           |
+| Prior 30 Days | 60.00 | 1.67 | -16.67%    | 19.76%      |
+
+### Como Testar
+
+Execute manualmente `sql/kpi_analysis.sql` no PostgreSQL para ver o resultado:
+
+```bash
+docker exec -i project_shadow-postgres-1 psql -U postgres -d ads_db -f sql/kpi_analysis.sql
+ 
