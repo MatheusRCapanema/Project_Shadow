@@ -99,7 +99,7 @@ A simple API endpoint was created using an n8n webhook workflow (`metrics_api_wo
 -   **Functionality**: It executes a parameterized query to calculate CAC and ROAS for the specified date range and returns the result in JSON format.
 -   **Example Usage**:
     ```bash
-    curl "http://localhost:5678/webhook/metrics?start=2025-04-01&end=2025-05-31"
+    curl "http://localhost:5678/webhook/metrics?start=2025-04-01&end=2025-05-01"
     ```
 -   **Example Response**:
     ```json
