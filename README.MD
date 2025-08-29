@@ -4,17 +4,6 @@
 
 We want to see how you approach data ingestion, modeling, and making metrics accessible. The goal is not a production system, but a clear demonstration of your thinking, SQL skills, and ability to use automation (n8n).
 
-## Project Structure
-
-├── workflows/
-│   ├── ingestion_workflow.json
-│   └── metrics_api_workflow.json
-├── sql/
-│   ├── create_table.sql
-│   └── kpi_analysis.sql
-├── docker-compose.yml
-└── README.md
-
 ## Prerequisites
 - Docker and Docker Compose installed.
 - Git.
@@ -24,8 +13,8 @@ We want to see how you approach data ingestion, modeling, and making metrics acc
 
 1.  **Clone the Repository**
     ```bash
-    git clone <repo-url>
-    cd <repo-folder>
+    git clone https://github.com/MatheusRCapanema/Project_Shadow.git
+    cd Project_Shadow
     ```
 2.  **Start Services**
     ```bash
@@ -89,31 +78,31 @@ We want to see how you approach data ingestion, modeling, and making metrics acc
 
 ## Part 4 – Agent Demo (Bonus, Optional)
 
-Demonstra como uma pergunta em linguagem natural como:
-"Compare CAC e ROAS dos últimos 30 dias versus os 30 dias anteriores."
-poderia ser mapeada para sua consulta e produzir uma resposta.
+Shows how a natural-language question like:
+"Compare CAC and ROAS for the last 30 days versus the prior 30 days."
+could be mapped to your query to produce an answer.
 
-### Abordagem de Mapeamento Simples
+### Simple Mapping Approach
 
-* **Análise (Parsing):** Use um padrão básico para detectar a intenção e os parâmetros.
-    * **Padrão:** Procurar por "compare" + métricas ("CAC" e/ou "ROAS") + períodos de tempo ("últimos X dias vs Y dias anteriores").
-    * **Exemplo de correspondência:** "compare CAC e ROAS dos últimos 30 dias vs 30 dias anteriores" → Extrair X=30, Y=30.
+* **Parsing:** Use a basic pattern to detect the intent and parameters.
+    * **Pattern:** Look for "compare" + metrics ("CAC" and/or "ROAS") + time periods ("last X days vs prior Y days").
+    * **Example match:** "compare CAC and ROAS for last 30 days vs prior 30 days" → Extract X=30, Y=30.
 
-* **Mapeamento para Consulta:** Mapeie a entrada analisada para o script `sql/kpi_analysis.sql`, que usa dinamicamente `MAX(date)` e `INTERVAL` para lidar com os períodos de 30 dias.
-    * O SQL já calcula o CAC (`spend / conversions`) e o ROAS (`(conversions * 100) / spend`), comparando os últimos 30 dias com os 30 dias anteriores.
+* **Mapping to Query:** Map the parsed input to the `sql/kpi_analysis.sql` script, which dynamically uses `MAX(date)` and `INTERVAL` to handle the 30-day periods.
+    * The SQL already computes CAC (`spend / conversions`) and ROAS (`(conversions * 100) / spend`), comparing the last 30 days vs. the prior 30 days.
 
-* **Execução:** Execute a consulta no PostgreSQL para produzir a tabela.
+* **Execution:** Run the query in PostgreSQL to produce the table.
 
-* **Exemplo de Saída (com base em dados de amostra):**
+* **Output Example (based on sample data):**
 
 | Period        | CAC   | ROAS | CAC Change | ROAS Change |
 |---------------|-------|------|------------|-------------|
 | Last 30 Days  | 50.00 | 2.00 | -          | -           |
 | Prior 30 Days | 60.00 | 1.67 | -16.67%    | 19.76%      |
 
-### Como Testar
+### How to Test
 
-Execute manualmente `sql/kpi_analysis.sql` no PostgreSQL para ver o resultado:
+Manually execute `sql/kpi_analysis.sql` in PostgreSQL to see the result:
 
 ```bash
 docker exec -i project_shadow-postgres-1 psql -U postgres -d ads_db -f sql/kpi_analysis.sql
